@@ -1,0 +1,19 @@
+# Core CrewAI and toolchain
+crewai>=0.28.0
+crewai-tools>=0.1.9
+langchain>=0.1.14
+openai>=1.14.0
+tqdm
+
+# Optional: If using Gemini or Google tools
+google-generativeai>=0.3.2
+
+# Web scraping (for future real job search)
+requests
+beautifulsoup4
+
+# Dotenv for environment variables
+python-dotenv
+
+# For running as a script or in Docker
+uvicorn
