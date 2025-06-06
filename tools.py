@@ -2,10 +2,11 @@
 
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Type, Optional, List
+from typing import Type, Optional, List, Dict
 import json
 import csv
 import os
+from difflib import SequenceMatcher
 
 
 # === 1. Job Search Tool ===
@@ -22,109 +23,113 @@ class JobSearchTool(BaseTool):
     def _run(self, keywords: Optional[List[str]] = None):
         from scraper import run_scraper
         from utils.ranker import score_and_rank_jobs
-        
-        jobs = run_scraper(keywords)
-        ranked_jobs = score_and_rank_jobs(jobs)
-        return ranked_jobs
 
-    def _arun(self, *args, **kwargs):
-        raise NotImplementedError("Async not implemented")
+        jobs = run_scraper(keywords)
+        ranked_jobs = score_and_rank_jobs(jobs, keywords)
+        return ranked_jobs
 
 
 # === 2. Job Evaluator Tool ===
 
-class JobEvaluationInput(BaseModel):
-    job: str
-    distance: float
-    score: float
+class SingleJobInput(BaseModel):
+    job: Dict[str, str] = Field(..., description="A single job dict with 'title' and 'description'")
 
 
 class JobEvaluatorTool(BaseTool):
     name: str = "Job Evaluator Tool"
-    description: str = "Evaluate a job listing based on distance and score"
-    args_schema: Type[BaseModel] = JobEvaluationInput
+    description: str = "Evaluates the job relevance using semantic and keyword match score"
+    args_schema: Type[BaseModel] = SingleJobInput
 
-    def _run(self, job: str, distance: float, score: float):
-        # Simple evaluation rule
-        if distance < 1.5 and score > 0.1:
-            return f"{job} is highly suitable"
-        elif distance < 2.0:
-            return f"{job} is moderately suitable"
-        else:
-            return f"{job} is not very relevant"
-    
-    def _arun(self, *args, **kwargs):
-        raise NotImplementedError("Async not implemented")
+    def _run(self, job: Dict[str, str]):
+        title = job.get("title", "").lower()
+        desc = job.get("description", "").lower()
+        content = f"{title} {desc}"
+
+        keywords = ["langchain", "rag", "genai", "automation tools", "no-code"]
+
+        keyword_hits = sum(1 for k in keywords if k in content)
+        keyword_score = keyword_hits / len(keywords)
+
+        base_relevance = SequenceMatcher(None, title, desc).ratio()
+
+        final_score = 0.6 * keyword_score + 0.4 * base_relevance
+
+        return {
+            "title": title,
+            "score": round(final_score, 3),
+            "keyword_hits": keyword_hits,
+            "base_relevance": round(base_relevance, 3)
+        }
 
 
-# === 3. Proposal Generator Tool ===
+# === 3. Proposal Writer Tool ===
 
 class ProposalInput(BaseModel):
+    job_title: str
     job_description: str
-    job_link: str
-    freelancer_skills: Optional[str] = None
 
 
 class ProposalTool(BaseTool):
-    name: str = "Proposal Generator Tool"
-    description: str = "Generate a proposal for a given job"
+    name: str = "Proposal Writer Tool"
+    description: str = "Generate a tailored proposal based on job title and description"
     args_schema: Type[BaseModel] = ProposalInput
 
-    def _run(self, job_description: str, job_link: str, freelancer_skills: Optional[str] = None):
-        return (
-            "Hi, I'm experienced in building LangChain/RAG pipelines and "
-            f"can help you develop the AI system for 'Untitled Project'."
-        )
+    def _run(self, job_title: str, job_description: str):
+        proposal = f"""Dear Client,
 
-    def _arun(self, *args, **kwargs):
-        raise NotImplementedError("Async not implemented")
+I am excited to apply for the {job_title}. With experience in similar projects, I believe I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused.
+
+Let's connect to discuss your goals in more detail.
+
+Best regards,
+Gayatri"""
+        return proposal
 
 
 # === 4. Memory Logger Tool ===
 
-class MemoryInput(BaseModel):
+class MemoryLogInput(BaseModel):
     job_title: str
     job_link: str
     proposal: str
-    application_status: Optional[str] = "applied"
 
 
 class MemoryTool(BaseTool):
-    name: str = "Memory Tool"
-    description: str = "Log job and proposal data to persistent storage"
-    args_schema: Type[BaseModel] = MemoryInput
+    name: str = "Memory Logger Tool"
+    description: str = "Logs applied jobs and proposals for record keeping"
+    args_schema: Type[BaseModel] = MemoryLogInput
 
-    def _run(self, job_title: str, job_link: str, proposal: str, application_status: Optional[str] = "applied"):
-        os.makedirs("memory", exist_ok=True)
-        entry = {
+    def _run(self, job_title: str, job_link: str, proposal: str):
+        memory_dir = "memory"
+        os.makedirs(memory_dir, exist_ok=True)
+
+        json_path = os.path.join(memory_dir, "memory_log.json")
+        csv_path = os.path.join(memory_dir, "memory_log.csv")
+
+        log_entry = {
             "job_title": job_title,
             "job_link": job_link,
             "proposal": proposal,
-            "status": application_status
+            "application_status": "applied"
         }
 
         # Append to JSON
-        json_path = os.path.join("memory", "memory_log.json")
         if os.path.exists(json_path):
             with open(json_path, "r") as f:
-                memory_data = json.load(f)
+                data = json.load(f)
         else:
-            memory_data = []
+            data = []
 
-        memory_data.append(entry)
+        data.append(log_entry)
         with open(json_path, "w") as f:
-            json.dump(memory_data, f, indent=2)
+            json.dump(data, f, indent=2)
 
         # Append to CSV
-        csv_path = os.path.join("memory", "memory_log.csv")
-        write_header = not os.path.exists(csv_path)
+        file_exists = os.path.exists(csv_path)
         with open(csv_path, "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=["job_title", "job_link", "proposal", "status"])
-            if write_header:
+            writer = csv.DictWriter(f, fieldnames=log_entry.keys())
+            if not file_exists:
                 writer.writeheader()
-            writer.writerow(entry)
+            writer.writerow(log_entry)
 
-        return f"✅ Logged job: {job_title}"
-
-    def _arun(self, *args, **kwargs):
-        raise NotImplementedError("Async not implemented")
+        return f"Logged job '{job_title}' with status 'applied'."

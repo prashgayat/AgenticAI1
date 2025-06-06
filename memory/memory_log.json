@@ -1,41 +1,46 @@
 [
   {
+    "job_title": "Developer",
+    "job_link": "Unavailable",
+    "proposal": "Dear Client, I am excited to apply for the Developer position you have available. With extensive experience in LangChain and GenAI, I am well-equipped to contribute effectively to your automation project. My technical expertise and commitment to delivering high-quality solutions make me a strong candidate for this role. In my previous projects, I have successfully utilized LangChain to develop sophisticated automation processes that enhance efficiency and performance. Additionally, my proficiency in GenAI allows me to integrate advanced artificial intelligence solutions, providing innovative and cutting-edge results tailored to specific project needs. I am particularly drawn to this opportunity because it aligns perfectly with my technical skills and passion for developing automated solutions that drive productivity and innovation. I am confident in my ability to bring tangible benefits to your project and am eager to contribute positively to your team. I would love the opportunity to discuss your goals and how I can help you achieve them. Thank you for considering my application. I look forward to the possibility of working together and contributing to the success of your automation project. Best regards, Gayatri",
+    "application_status": "applied",
+    "timestamp": "2025-06-06T10:39:30.347010"
+  },
+  {
+    "job_title": "Developer experienced in LangChain and GenAI",
+    "job_link": "unknown",
+    "proposal": "Dear Client, I am excited to apply for the Developer experienced in LangChain and GenAI. With experience in similar projects, I believe I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused. Let's connect to discuss your goals in more detail. Best regards, Gayatri",
+    "application_status": "applied",
+    "timestamp": "2025-06-06T10:48:20.053297"
+  },
+  {
+    "job_title": "GenAI Automation Specialist",
+    "job_link": "http://placeholder.com",
+    "proposal": "Dear Client,\n\nI am excited to apply for the GenAI Automation Specialist. With experience in similar projects, I believe I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused.\n\nLet's connect to discuss your goals in more detail.\n\nBest regards,\nGayatri",
+    "status": "applied"
+  },
+  {
+    "job_title": "Freelance job for developing a no-code automation tool",
+    "job_link": "www.upwork.com/job",
+    "proposal": "Dear Client,\n\nI am excited to apply for the Freelance job for developing a no-code automation tool. With experience in similar projects, I believe I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused.\n\nLet's connect to discuss your goals in more detail.\n\nBest regards,\nGayatri",
+    "status": "applied"
+  },
+  {
+    "job_title": "Freelance job for developing a no-code automation tool",
+    "job_link": "www.joblink.com",
+    "proposal": "Dear Client,\n\nI am excited to apply for the Freelance job for developing a no-code automation tool. With extensive experience in using 'LangChain' and 'RAG', and a proven track record in developing no-code automation tools, I am confident that I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused, ensuring that the end product aligns with your vision and goals.\n\nI am eager to bring my expertise to your project and help you achieve your objectives. Let's connect to discuss your goals in more detail.\n\nBest regards,\n[Your Name]",
+    "status": "applied"
+  },
+  {
     "job_title": "LangChain Chatbot Developer",
-    "job_url": "https://upwork.com/job/1",
-    "description": "Develop and optimize a chatbot using LangChain.",
-    "proposal": "Hi, I'm experienced in LangChain chatbot systems...",
-    "score": 0.18,
-    "distance": 1.27,
-    "timestamp": "2025-06-04T17:36:33.851066"
+    "job_link": "https://upwork.com/job/1",
+    "proposal": "Dear Client,\n\nI am excited to apply for the LangChain Chatbot Developer. With experience in similar projects, I believe I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused.\n\nLet's connect to discuss your goals in more detail.\n\nBest regards,\nGayatri",
+    "application_status": "applied"
   },
   {
-    "job_title": "Web Developer Needed for E-commerce Site",
-    "job_link": "http://example.com/job1",
-    "proposal": "I have extensive experience in developing e-commerce websites using the latest web technologies. My portfolio includes several successful projects that have improved sales and customer engagement for my clients. I am confident in delivering a high-quality site that meets your needs.",
-    "status": "applied"
-  },
-  {
-    "job_title": "Graphic Designer for Brand Identity",
-    "job_link": "http://example.com/job2",
-    "proposal": "As a seasoned graphic designer, I specialize in creating compelling brand identities that resonate with target audiences. My approach is centered around understanding your brand values and translating them into visual elements that stand out. I'm eager to bring your brand vision to life.",
-    "status": "applied"
-  },
-  {
-    "job_title": "Mobile App Developer for Health & Fitness App",
-    "job_link": "http://example.com/job3",
-    "proposal": "With a robust background in developing mobile applications, particularly in the health and fitness sector, I am equipped to create a dynamic and user-friendly app that meets your specifications. My work emphasizes seamless user experiences and innovative features that engage and retain users.",
-    "status": "applied"
-  },
-  {
-    "job_title": "LangChain application for personalized AI-driven recommendations",
-    "job_link": "https://example.com/job/langchain-application",
-    "proposal": "Dear [Client's Name], I hope this message finds you well. I am writing to express my interest in your project titled 'LangChain application for personalized AI-driven recommendations.' With my expertise in LangChain, Retrieval-Augmented Generation (RAG), and no-code tools, I am confident in my ability to deliver a high-quality solution tailored to your needs. In today's rapidly evolving digital landscape, personalized recommendations are crucial for enhancing user engagement and satisfaction. My approach involves leveraging LangChain to build robust, scalable, and intelligent systems that can provide tailored recommendations based on user data and preferences. By integrating RAG, I can ensure that the system generates accurate and contextually relevant suggestions, enhancing the overall user experience. Moreover, my proficiency with no-code tools allows for rapid prototyping and deployment, ensuring that you receive a functional product in a timely manner without compromising on quality. This approach also facilitates easy adjustments and scaling as your requirements evolve. I am enthusiastic about the opportunity to collaborate with you and contribute to the success of your project. Please feel free to reach out to discuss your specific requirements in more detail. I am eager to bring your vision to life with precision and excellence. Thank you for considering my proposal. I look forward to the possibility of working together. Warm regards, [Your Name] [Your Contact Information]",
-    "status": "applied"
-  },
-  {
-    "job_title": "Untitled Project",
-    "job_link": "http://example.com/untitled-project",
-    "proposal": "Hi, I'm experienced in building LangChain/RAG pipelines and can help you develop the AI system for 'Untitled Project'.",
-    "status": "applied"
+    "job_title": "LangChain Chatbot Developer",
+    "job_link": "www.example.com",
+    "proposal": "Dear Client,\n\nI am excited to apply for the LangChain Chatbot Developer. With experience in similar projects, I believe I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused.\n\nLet's connect to discuss your goals in more detail.\n\nBest regards,\nGayatri",
+    "application_status": "applied"
   }
 ]

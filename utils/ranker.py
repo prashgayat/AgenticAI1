@@ -1,34 +1,36 @@
-# utils/ranker.py
+from datetime import datetime
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from typing import List
 
-KEYWORDS = ["LangChain", "OpenAI", "Streamlit", "RAG", "GPT"]
+def score_and_rank_jobs(jobs: List[dict], keywords: List[str]) -> List[dict]:
+    if not jobs:
+        print("⚠️ No jobs provided to score.")
+        return []
 
-# Configurable weights for scoring
-WEIGHTS = {
-    "semantic": 0.7,  # Based on FAISS distance
-    "keyword": 0.3    # Based on presence of key terms
-}
+    print(f"📊 Ranking {len(jobs)} job(s)...")
 
-def score_job(idx, distance, descriptions):
-    """
-    Compute a hybrid relevance score for a job.
-    - idx: index from FAISS result
-    - distance: semantic distance from FAISS
-    - descriptions: list of job descriptions
-    Returns: float score between 0 and 1 (higher is better)
-    """
-    if idx >= len(descriptions):
-        return 0.0
+    query_text = " ".join(keywords).lower()
+    job_texts = [f"{job['title']} {job['description']}".lower() for job in jobs]
 
-    desc = descriptions[idx].lower()
-    max_distance = 1.0  # Normalization factor (FAISS distances are typically <1.0)
+    vectorizer = TfidfVectorizer().fit([query_text] + job_texts)
+    query_vec = vectorizer.transform([query_text])
+    job_vecs = vectorizer.transform(job_texts)
 
-    # Semantic relevance (inverted distance)
-    semantic_score = 1.0 - min(distance / max_distance, 1.0)
+    cosine_scores = cosine_similarity(query_vec, job_vecs)[0]
 
-    # Keyword presence
-    keyword_hits = sum(1 for kw in KEYWORDS if kw.lower() in desc)
-    keyword_score = keyword_hits / len(KEYWORDS)
+    ranked = []
+    for idx, job in enumerate(jobs):
+        score = float(cosine_scores[idx])
+        distance = 1 - score
+        ranked.append({
+            "title": job["title"],
+            "description": job["description"],
+            "link": job.get("url") or job.get("job_link") or "https://example.com",
+            "score": round(score, 4),
+            "distance": round(distance, 4)
+        })
 
-    # Final weighted score
-    final_score = WEIGHTS["semantic"] * semantic_score + WEIGHTS["keyword"] * keyword_score
-    return round(final_score, 4)
+    ranked.sort(key=lambda x: x["score"], reverse=True)
+    print(f"✅ Ranked {len(ranked)} jobs.")
+    return ranked

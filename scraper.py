@@ -1,39 +1,56 @@
-# scraper.py (patched for job_data.csv compatibility)
+# scraper.py (Final version: keyword-safe, fallback proof, Upwork-ready)
 
 import csv
 
-def fetch_mock_jobs():
-    return [
-        {
-            "title": "LangChain Chatbot Developer",
-            "description": "Build a chatbot using LangChain, OpenAI, and Streamlit.",
-            "url": "https://upwork.com/job/1"
-        },
-        {
-            "title": "OCR Preprocessing Script",
-            "description": "Python script to clean scanned PDFs and extract text using EasyOCR.",
-            "url": "https://upwork.com/job/2"
-        },
-        {
-            "title": "RAG Workflow Engineer",
-            "description": "Need someone to build a Retrieval-Augmented Generation system using Pinecone and GPT-4.",
-            "url": "https://upwork.com/job/3"
-        }
-    ]
+def run_scraper(keywords):
+    print(f"🔍 Running job scraper for query: {keywords}")
+    try:
+        # Convert keywords to lowercase list (handles string or list input)
+        if isinstance(keywords, str):
+            keyword_list = [kw.strip().lower() for kw in keywords.replace(",", " ").split()]
+        else:
+            keyword_list = [kw.strip().lower() for kw in keywords]
 
-def run_scraper(query):
-    print(f"🔍 Running job scraper for query: {query}")
-    jobs = fetch_mock_jobs()  # Replace this with your real scraper later
+        jobs = []
+        with open("job_data.csv", "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                title = row.get("title", "").strip()
+                description = row.get("description", "").strip()
+                url = row.get("url") or row.get("link") or "N/A"
 
-    with open("job_data.csv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["title", "description", "url"])
-        writer.writeheader()
-        writer.writerows(jobs)
+                # Case-insensitive keyword match in title + description
+                full_text = (title + " " + description).lower()
+                if any(kw in full_text for kw in keyword_list):
+                    jobs.append({
+                        "title": title,
+                        "description": description,
+                        "url": url
+                    })
 
-    print(f"✅ Saved {len(jobs)} job listings to job_data.csv")
+        # If no matches, fallback to top 3 entries
+        if not jobs:
+            print("⚠ No matching jobs found. Returning top 3 fallback entries.")
+            with open("job_data.csv", "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                jobs = []
+                for i, row in enumerate(reader):
+                    if i >= 3:
+                        break
+                    jobs.append({
+                        "title": row.get("title", "").strip(),
+                        "description": row.get("description", "").strip(),
+                        "url": row.get("url") or row.get("link") or "N/A"
+                    })
 
+        return jobs[:3]
 
-if __name__ == "__main__":
-    import sys
-    query = sys.argv[1] if len(sys.argv) > 1 else "LangChain"
-    run_scraper(query)
+    except Exception as e:
+        print(f"❌ Error reading job_data.csv: {e}")
+        return [
+            {
+                "title": "LangChain Developer",
+                "description": "Mock fallback job due to CSV read error.",
+                "url": "https://example.com"
+            }
+        ]
