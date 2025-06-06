@@ -11,7 +11,7 @@ from tools import JobSearchTool, JobEvaluatorTool, ProposalTool, MemoryTool
 # === LLM ===
 llm = ChatOpenAI(
     temperature=0.2,
-    model="gpt-4",
+    model="gpt-3.5-turbo",  # ✅ Switched from gpt-4 to gpt-3.5-turbo
     openai_api_key=os.getenv("OPENAI_API_KEY")
 )
 
