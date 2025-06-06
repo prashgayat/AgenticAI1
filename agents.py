@@ -3,62 +3,62 @@
 from crewai import Agent, Crew, Task
 from tools import JobSearchTool, JobEvaluatorTool, ProposalTool, MemoryTool
 from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 import os
 
-# === Setup the LLM (GPT-3.5 for now to save cost) ===
+# Load environment variables from .env
+load_dotenv()
+
+# Set up LLM using GPT-3.5
 llm = ChatOpenAI(
     model="gpt-3.5-turbo",
     temperature=0,
-    openai_api_key=os.getenv("OPENAI_API_KEY")
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
-# === Agent 1: Scout Agent ===
+# Agent 1: Scout Agent
 scout_agent = Agent(
     role="Job Scout",
     goal="Identify the best freelance job opportunities in AI and automation",
-    backstory="An expert in scouring job boards like Upwork to find opportunities aligned with LangChain, RAG, and GenAI.",
-    llm=llm,
+    backstory="Expert at exploring platforms like Upwork to find quality projects for AI professionals.",
     tools=[JobSearchTool],
     verbose=True,
-    allow_delegation=True,
+    llm=llm,
 )
 
-# === Agent 2: Evaluator Agent ===
+# Agent 2: Evaluator Agent
 evaluator_agent = Agent(
     role="Job Evaluator",
-    goal="Evaluate job listings based on skills, client rating, and payout potential",
-    backstory="An analytical expert who scores jobs based on semantic relevance, keyword match, and project quality.",
-    llm=llm,
+    goal="Evaluate and score freelance jobs based on quality, payout, and relevance",
+    backstory="Data-driven agent who analyzes each opportunity deeply before recommending.",
     tools=[JobEvaluatorTool],
     verbose=True,
-    allow_delegation=True,
+    llm=llm,
 )
 
-# === Agent 3: Proposal Writer ===
+# Agent 3: Proposal Writer Agent
 writer_agent = Agent(
     role="Proposal Writer",
-    goal="Draft compelling proposals tailored to the specific job and client needs",
-    backstory="A persuasive communicator that writes tailored, high-converting freelance proposals.",
-    llm=llm,
+    goal="Write tailored, compelling proposals to win freelance jobs",
+    backstory="Creative communicator skilled in persuasive writing for Upwork proposals.",
     tools=[ProposalTool],
     verbose=True,
-    allow_delegation=False,
+    llm=llm,
 )
 
-# === Agent 4: Memory Logger ===
+# Agent 4: Memory Logger Agent
 memory_agent = Agent(
     role="Memory Logger",
-    goal="Log every job applied to along with the proposal details for future tracking",
-    backstory="A meticulous recorder who ensures all job applications are saved and reusable.",
-    llm=llm,
+    goal="Log applied jobs and proposals for tracking and learning",
+    backstory="Meticulous tracker that ensures all actions are saved in memory logs.",
     tools=[MemoryTool],
     verbose=True,
-    allow_delegation=False,
+    llm=llm,
 )
 
-# === Crew Definition ===
+# Final Crew Assembly
 crew = Crew(
     agents=[scout_agent, evaluator_agent, writer_agent, memory_agent],
-    tasks=[],  # Populated in run_pipeline.py
+    tasks=[],
     verbose=True,
 )
