@@ -1,92 +1,76 @@
 # agents.py
 
-from dotenv import load_dotenv
-load_dotenv()
-
-import os
-from langchain.chat_models import ChatOpenAI
 from crewai import Agent, Crew, Task
 from tools import JobSearchTool, JobEvaluatorTool, ProposalTool, MemoryTool
+from langchain_openai import ChatOpenAI
+import os
 
-# === LLM ===
+# Define the LLM with GPT-3.5 instead of GPT-4
 llm = ChatOpenAI(
-    temperature=0.2,
-    model="gpt-3.5-turbo",  # ✅ Switched from gpt-4 to gpt-3.5-turbo
+    model="gpt-3.5-turbo",
+    temperature=0,
     openai_api_key=os.getenv("OPENAI_API_KEY")
 )
 
-# === TOOLS ===
-tools = [JobSearchTool(), JobEvaluatorTool(), ProposalTool(), MemoryTool()]
-
-# === AGENTS ===
-ScoutAgent = Agent(
+# Agent 1: Scout Agent - Finds and ranks jobs
+scout_agent = Agent(
     role="Job Scout",
-    goal="Find the most relevant freelance jobs based on keyword filters and budget",
-    backstory="You are an expert freelance job scout who knows how to find high-value and relevant jobs for a GenAI freelancer.",
+    goal="Identify the best freelance job opportunities in AI and automation",
+    backstory=(
+        "An expert in scouring job boards like Upwork to find opportunities that align "
+        "with specific skill sets like LangChain, RAG, and GenAI."
+    ),
+    tools=[JobSearchTool],
     verbose=True,
     allow_delegation=True,
-    tools=tools,
     llm=llm,
 )
 
-EvaluatorAgent = Agent(
+# Agent 2: Evaluator Agent - Evaluates and scores jobs
+evaluator_agent = Agent(
     role="Job Evaluator",
-    goal="Score and rank jobs based on semantic and keyword relevance",
-    backstory="You're skilled at assessing freelance job quality and match potential using hybrid relevance metrics.",
+    goal="Evaluate job listings based on skills, client rating, and payout potential",
+    backstory=(
+        "A highly analytical agent that scores jobs based on keyword and semantic relevance, "
+        "client quality, and scope match."
+    ),
+    tools=[JobEvaluatorTool],
     verbose=True,
     allow_delegation=True,
-    tools=tools,
     llm=llm,
 )
 
-WriterAgent = Agent(
+# Agent 3: Proposal Writer Agent
+writer_agent = Agent(
     role="Proposal Writer",
-    goal="Write a compelling proposal for the best job match",
-    backstory="You are a top-tier proposal writer with a knack for personalized and persuasive freelance proposals.",
+    goal="Draft compelling proposals tailored to the specific job and client needs",
+    backstory=(
+        "An articulate and persuasive communicator that crafts customized proposals "
+        "with a high chance of success."
+    ),
+    tools=[ProposalTool],
     verbose=True,
     allow_delegation=False,
-    tools=tools,
     llm=llm,
 )
 
-MemoryAgent = Agent(
+# Agent 4: Memory Logger Agent
+memory_agent = Agent(
     role="Memory Logger",
-    goal="Save job details and proposals to persistent memory for tracking",
-    backstory="You handle meticulous record-keeping of all applications made, proposals sent, and statuses.",
+    goal="Log every job applied to along with the proposal details for future tracking",
+    backstory=(
+        "A meticulous recorder who ensures no opportunity is forgotten. Keeps records "
+        "clean, organized, and reusable."
+    ),
+    tools=[MemoryTool],
     verbose=True,
     allow_delegation=False,
-    tools=tools,
     llm=llm,
 )
 
-# === TASKS ===
-task1 = Task(
-    description="Search for the latest freelance jobs on Upwork using keywords like 'LangChain', 'RAG', 'GenAI', 'automation tools', and 'no-code'. Return the top matches.",
-    expected_output="A list of 3 shortlisted jobs relevant to GenAI and automation skills.",
-    agent=ScoutAgent,
-)
-
-task2 = Task(
-    description="Evaluate the shortlisted jobs based on semantic and keyword relevance. Rank them and select the best fit.",
-    expected_output="The best-fit job among the list based on hybrid scoring criteria.",
-    agent=EvaluatorAgent,
-)
-
-task3 = Task(
-    description="Write a proposal tailored to the best-fit job selected by the Evaluator Agent.",
-    expected_output="A compelling and concise proposal ready to submit on Upwork.",
-    agent=WriterAgent,
-)
-
-task4 = Task(
-    description="Save the job details and proposal into memory for record keeping and future tracking.",
-    expected_output="Confirmation that the job, proposal, and status were saved into memory.",
-    agent=MemoryAgent,
-)
-
-# === CREW ===
+# Create the crew
 crew = Crew(
-    agents=[ScoutAgent, EvaluatorAgent, WriterAgent, MemoryAgent],
-    tasks=[task1, task2, task3, task4],
-    verbose=True
+    agents=[scout_agent, evaluator_agent, writer_agent, memory_agent],
+    tasks=[],
+    verbose=True,
 )

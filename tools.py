@@ -2,14 +2,27 @@
 
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Type, Optional, List, Dict
+from typing import Type, Optional, List
 import json
 import csv
 import os
-from difflib import SequenceMatcher
 
 
-# === 1. Job Search Tool ===
+# =========================
+# Pydantic JobPosting Model
+# =========================
+
+class JobPosting(BaseModel):
+    title: str
+    description: str
+    link: str
+    score: float
+    distance: float
+
+
+# =========================
+# 1. Job Search Tool
+# =========================
 
 class JobSearchInput(BaseModel):
     keywords: Optional[List[str]] = Field(default=None, description="Search keywords for job retrieval")
@@ -26,43 +39,33 @@ class JobSearchTool(BaseTool):
 
         jobs = run_scraper(keywords)
         ranked_jobs = score_and_rank_jobs(jobs, keywords)
-        return ranked_jobs
+        return [job.dict() for job in ranked_jobs]  # Return list of dicts
 
 
-# === 2. Job Evaluator Tool ===
+# =========================
+# 2. Job Evaluator Tool
+# =========================
 
-class SingleJobInput(BaseModel):
-    job: Dict[str, str] = Field(..., description="A single job dict with 'title' and 'description'")
+class JobEvaluationInput(BaseModel):
+    job: str = Field(..., description="JSON stringified job object")
+    score: float
+    distance: float
 
 
 class JobEvaluatorTool(BaseTool):
     name: str = "Job Evaluator Tool"
     description: str = "Evaluates the job relevance using semantic and keyword match score"
-    args_schema: Type[BaseModel] = SingleJobInput
+    args_schema: Type[BaseModel] = JobEvaluationInput
 
-    def _run(self, job: Dict[str, str]):
-        title = job.get("title", "").lower()
-        desc = job.get("description", "").lower()
-        content = f"{title} {desc}"
-
-        keywords = ["langchain", "rag", "genai", "automation tools", "no-code"]
-
-        keyword_hits = sum(1 for k in keywords if k in content)
-        keyword_score = keyword_hits / len(keywords)
-
-        base_relevance = SequenceMatcher(None, title, desc).ratio()
-
-        final_score = 0.6 * keyword_score + 0.4 * base_relevance
-
-        return {
-            "title": title,
-            "score": round(final_score, 3),
-            "keyword_hits": keyword_hits,
-            "base_relevance": round(base_relevance, 3)
-        }
+    def _run(self, job: str, score: float, distance: float):
+        job_data = json.loads(job)
+        title = job_data.get("title", "Unknown Job")
+        return f"The job '{title}' has a relevance score of {score} (distance: {distance})."
 
 
-# === 3. Proposal Writer Tool ===
+# =========================
+# 3. Proposal Writer Tool
+# =========================
 
 class ProposalInput(BaseModel):
     job_title: str
@@ -71,27 +74,29 @@ class ProposalInput(BaseModel):
 
 class ProposalTool(BaseTool):
     name: str = "Proposal Writer Tool"
-    description: str = "Generate a tailored proposal based on job title and description"
+    description: str = "Generates a freelance proposal for the given job"
     args_schema: Type[BaseModel] = ProposalInput
 
     def _run(self, job_title: str, job_description: str):
-        proposal = f"""Dear Client,
+        return (
+            f"Dear Client,\n\n"
+            f"I am excited to apply for the {job_title}. With experience in similar projects, I believe I can "
+            f"deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused.\n\n"
+            f"Let's connect to discuss your goals in more detail.\n\n"
+            f"Best regards,\n"
+            f"Gayatri"
+        )
 
-I am excited to apply for the {job_title}. With experience in similar projects, I believe I can deliver exceptional results tailored to your needs. My approach is solution-oriented and client-focused.
 
-Let's connect to discuss your goals in more detail.
-
-Best regards,
-Gayatri"""
-        return proposal
-
-
-# === 4. Memory Logger Tool ===
+# =========================
+# 4. Memory Logger Tool
+# =========================
 
 class MemoryLogInput(BaseModel):
     job_title: str
     job_link: str
     proposal: str
+    application_status: str = "applied"
 
 
 class MemoryTool(BaseTool):
@@ -99,37 +104,35 @@ class MemoryTool(BaseTool):
     description: str = "Logs applied jobs and proposals for record keeping"
     args_schema: Type[BaseModel] = MemoryLogInput
 
-    def _run(self, job_title: str, job_link: str, proposal: str):
-        memory_dir = "memory"
-        os.makedirs(memory_dir, exist_ok=True)
-
-        json_path = os.path.join(memory_dir, "memory_log.json")
-        csv_path = os.path.join(memory_dir, "memory_log.csv")
-
-        log_entry = {
+    def _run(self, job_title: str, job_link: str, proposal: str, application_status: str = "applied"):
+        record = {
             "job_title": job_title,
             "job_link": job_link,
             "proposal": proposal,
-            "application_status": "applied"
+            "application_status": application_status
         }
 
-        # Append to JSON
+        os.makedirs("memory", exist_ok=True)
+
+        # JSON logging
+        json_path = "memory/memory_log.json"
         if os.path.exists(json_path):
             with open(json_path, "r") as f:
                 data = json.load(f)
         else:
             data = []
 
-        data.append(log_entry)
+        data.append(record)
         with open(json_path, "w") as f:
             json.dump(data, f, indent=2)
 
-        # Append to CSV
-        file_exists = os.path.exists(csv_path)
-        with open(csv_path, "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=log_entry.keys())
+        # CSV logging
+        csv_path = "memory/memory_log.csv"
+        file_exists = os.path.isfile(csv_path)
+        with open(csv_path, mode="a", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=["job_title", "job_link", "proposal", "application_status"])
             if not file_exists:
                 writer.writeheader()
-            writer.writerow(log_entry)
+            writer.writerow(record)
 
-        return f"Logged job '{job_title}' with status 'applied'."
+        return f"Logged job '{job_title}' with status '{application_status}'."
